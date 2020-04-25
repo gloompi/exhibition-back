@@ -15,15 +15,20 @@ type connection struct {
 var connectionInstance *connection
 
 func ReadConnection() *connection {
-	psql_user := os.Getenv("PSQL_USERNAME")
-	psql_password := os.Getenv("PSQL_PASSWORD")
-	psql_address := os.Getenv("PSQL_ADDRESS")
+	psqlUser := os.Getenv("PSQL_USERNAME")
+	psqlPassword := os.Getenv("PSQL_PASSWORD")
+	psqlAddress := os.Getenv("PSQL_ADDRESS")
+	psqlDb := os.Getenv("PSQL_DB")
 
-	if psql_address == "" {
-		psql_address = "localhost:5432"
+	if psqlAddress == "" {
+		psqlAddress = "localhost:5432"
 	}
 
-	connStr := fmt.Sprintf("postgres://%s:%s@%s/streaming_service?sslmode=disable", psql_user, psql_password, psql_address)
+	if psqlDb == "" {
+		psqlDb = "streaming_service"
+	}
+
+	connStr := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", psqlUser, psqlPassword, psqlAddress, psqlDb)
 
 	if connectionInstance == nil {
 		db, err := sql.Open("postgres", connStr)
