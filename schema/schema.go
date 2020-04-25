@@ -3,7 +3,10 @@ package schema
 import (
 	"github.com/graphql-go/graphql"
 	"log"
+	"online-exhibition.com/app/dbConnection"
 )
+
+var connection = dbConnection.ReadConnection()
 
 func ReadSchema() *graphql.SchemaConfig {
 	schemaConfig := graphql.SchemaConfig{
@@ -17,7 +20,10 @@ func ReadSchema() *graphql.SchemaConfig {
 func readRootQuery() *graphql.Object {
 	fields := graphql.Fields{
 		"users":     readUsersSchema(),
-		"loginUser": loginUserSchema(),
+		"loginUser": readLoginUserSchema(),
+		"admins":    readAdminsSchema(),
+		"producers": readProducersSchema(),
+		"audience":  readAudienceSchema(),
 	}
 
 	return graphql.NewObject(graphql.ObjectConfig{Name: "RootQuery", Fields: fields})
@@ -25,7 +31,9 @@ func readRootQuery() *graphql.Object {
 
 func readRootMutation() *graphql.Object {
 	fields := graphql.Fields{
-		"createUser": readCreateUserSchema(),
+		"createUser":    readCreateUserSchema(),
+		"addToAdmins":   readAddToAdminSchema(),
+		"addToProducer": readAddToProducerSchema(),
 	}
 
 	return graphql.NewObject(graphql.ObjectConfig{Name: "RootMutation", Fields: fields})

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/graphql-go/graphql"
-	"online-exhibition.com/app/dbConnection"
 	"online-exhibition.com/app/utils"
 )
 
@@ -19,8 +18,6 @@ type User struct {
 	DateOfBirth string         `json:"date_of_birth"`
 	IsActive    bool           `json:"is_active"`
 }
-
-var connection = dbConnection.ReadConnection()
 
 var userType = graphql.NewObject(graphql.ObjectConfig{
 	Name: "User",
@@ -137,7 +134,7 @@ func readCreateUserSchema() *graphql.Field {
 	}
 }
 
-func loginUserSchema() *graphql.Field {
+func readLoginUserSchema() *graphql.Field {
 	return &graphql.Field{
 		Type: userType,
 		Args: graphql.FieldConfigArgument{

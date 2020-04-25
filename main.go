@@ -16,7 +16,8 @@ var conf config = readConfig()
 func main() {
 	connection := dbConnection.ReadConnection()
 	listenAt := fmt.Sprintf(":%d", conf.port)
-	fmt.Println("CONNECTION------", connection.DB.Ping())
+	fmt.Println("DB-CONNECTION------", connection.DB.Ping())
+
 	defer connection.DB.Close()
 
 	// graphql
@@ -37,7 +38,7 @@ func main() {
 }
 
 func handleIndex(w http.ResponseWriter, req *http.Request) {
-	io.WriteString(w, "Hello World!")
+	io.WriteString(w, "You are doing Great!")
 }
 
 func errCheck(err error) {
