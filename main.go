@@ -16,6 +16,7 @@ var conf config = readConfig()
 func main() {
 	connection := dbConnection.ReadConnection()
 	listenAt := fmt.Sprintf(":%d", conf.port)
+	fmt.Println("CONNECTION------", connection.DB.Ping())
 	defer connection.DB.Close()
 
 	// graphql

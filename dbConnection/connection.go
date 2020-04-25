@@ -29,7 +29,7 @@ func ReadConnection() *connection {
 		db, err := sql.Open("postgres", connStr)
 
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalln(err)
 		}
 		connectionInstance = &connection{db}
 	}
