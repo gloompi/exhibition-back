@@ -1,7 +1,6 @@
 package schema
 
 import (
-	"database/sql"
 	"fmt"
 	"github.com/graphql-go/graphql"
 )
@@ -28,23 +27,21 @@ func readAdminsSchema() *graphql.Field {
 			errCheck(err)
 
 			var admins []*User
-			var firstName, lastName, email, dateOfBirth, userId, userName string
-			var phone sql.NullString
-			var isActive bool
 
 			for rows.Next() {
-				err = rows.Scan(&firstName, &lastName, &email, &dateOfBirth, &isActive, &userId, &phone, &userName)
+				var user User
+				err = rows.Scan(
+					&user.FirstName,
+					&user.LastName,
+					&user.Email,
+					&user.DateOfBirth,
+					&user.IsActive,
+					&user.UserId,
+					&user.Phone,
+					&user.UserName,
+					)
 				errCheck(err)
-				admins = append(admins, &User{
-					userId,
-					firstName,
-					lastName,
-					userName,
-					email,
-					phone,
-					dateOfBirth,
-					isActive,
-				})
+				admins = append(admins, &user)
 			}
 
 			return admins, nil
@@ -73,23 +70,22 @@ func readProducersSchema() *graphql.Field {
 			errCheck(err)
 
 			var producers []*User
-			var firstName, lastName, email, dateOfBirth, userId, userName string
-			var phone sql.NullString
-			var isActive bool
 
 			for rows.Next() {
-				err = rows.Scan(&firstName, &lastName, &email, &dateOfBirth, &isActive, &userId, &phone, &userName)
+				var user User
+				err = rows.Scan(
+					&user.FirstName,
+					&user.LastName,
+					&user.Email,
+					&user.DateOfBirth,
+					&user.IsActive,
+					&user.UserId,
+					&user.Phone,
+					&user.UserName,
+				)
+
 				errCheck(err)
-				producers = append(producers, &User{
-					userId,
-					firstName,
-					lastName,
-					userName,
-					email,
-					phone,
-					dateOfBirth,
-					isActive,
-				})
+				producers = append(producers, &user)
 			}
 
 			return producers, nil
@@ -122,23 +118,22 @@ func readAudienceSchema() *graphql.Field {
 			errCheck(err)
 
 			var audience []*User
-			var firstName, lastName, email, dateOfBirth, userId, userName string
-			var phone sql.NullString
-			var isActive bool
 
 			for rows.Next() {
-				err = rows.Scan(&firstName, &lastName, &email, &dateOfBirth, &isActive, &userId, &phone, &userName)
+				var user User
+				err = rows.Scan(
+					&user.FirstName,
+					&user.LastName,
+					&user.Email,
+					&user.DateOfBirth,
+					&user.IsActive,
+					&user.UserId,
+					&user.Phone,
+					&user.UserName,
+				)
+
 				errCheck(err)
-				audience = append(audience, &User{
-					userId,
-					firstName,
-					lastName,
-					userName,
-					email,
-					phone,
-					dateOfBirth,
-					isActive,
-				})
+				audience = append(audience, &user)
 			}
 
 			return audience, nil

@@ -1,7 +1,6 @@
 package schema
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/graphql-go/graphql"
@@ -14,7 +13,7 @@ type User struct {
 	LastName    string         `json:"last_name"`
 	UserName    string         `json:"user_name"`
 	Email       string         `json:"email"`
-	Phone       sql.NullString `json:"phone"`
+	Phone       string	       `json:"phone"`
 	DateOfBirth string         `json:"date_of_birth"`
 	IsActive    bool           `json:"is_active"`
 }
@@ -53,23 +52,21 @@ func readUsersSchema() *graphql.Field {
 			errCheck(err)
 
 			var users []*User
-			var firstName, lastName, email, dateOfBirth, userId, userName string
-			var phone sql.NullString
-			var isActive bool
 
 			for rows.Next() {
-				err = rows.Scan(&firstName, &lastName, &email, &dateOfBirth, &isActive, &userId, &phone, &userName)
+				var user User
+				err = rows.Scan(
+					&user.FirstName,
+					&user.LastName,
+					&user.Email,
+					&user.DateOfBirth,
+					&user.IsActive,
+					&user.UserId,
+					&user.Phone,
+					&user.UserName,
+					)
 				errCheck(err)
-				users = append(users, &User{
-					userId,
-					firstName,
-					lastName,
-					userName,
-					email,
-					phone,
-					dateOfBirth,
-					isActive,
-				})
+				users = append(users, &user)
 			}
 
 			return users, nil
@@ -163,21 +160,19 @@ func readLoginUserSchema() *graphql.Field {
 			errCheck(err)
 
 			var existingPassword []byte
-			var firstName, lastName, email, dateOfBirth, userId string
-			var phone sql.NullString
-			var isActive bool
+			var user User
 
 			for rows.Next() {
 				err = rows.Scan(
-					&userId,
-					&userName,
+					&user.UserId,
+					&user.UserName,
 					&existingPassword,
-					&firstName,
-					&lastName,
-					&email,
-					&phone,
-					&dateOfBirth,
-					&isActive,
+					&user.FirstName,
+					&user.LastName,
+					&user.Email,
+					&user.Phone,
+					&user.DateOfBirth,
+					&user.IsActive,
 				)
 				errCheck(err)
 			}
@@ -185,17 +180,6 @@ func readLoginUserSchema() *graphql.Field {
 			correctPassword := utils.CheckPassword(existingPassword, password)
 			if correctPassword == false {
 				return nil, errors.New("wrong username or password")
-			}
-
-			user := &User{
-				userId,
-				firstName,
-				lastName,
-				userName,
-				email,
-				phone,
-				dateOfBirth,
-				isActive,
 			}
 
 			return user, err

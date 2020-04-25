@@ -1,7 +1,6 @@
 package schema
 
 import (
-	"database/sql"
 	"fmt"
 	"github.com/graphql-go/graphql"
 	"strings"
@@ -55,45 +54,28 @@ func readExhibitionsSchema() *graphql.Field {
 			errCheck(err)
 
 			var exhibitions []*Exhibition
-			var exhibitionId, name, description, startDate, createdDate, firstName, lastName, email, dateOfBirth, userId, userName string
-			var phone sql.NullString
-			var isActive bool
 
 			for rows.Next() {
+				var exhibition Exhibition
+
 				err = rows.Scan(
-					&exhibitionId,
-					&name,
-					&description,
-					&startDate,
-					&createdDate,
-					&firstName,
-					&lastName,
-					&email,
-					&dateOfBirth,
-					&isActive,
-					&userId,
-					&phone,
-					&userName,
+					&exhibition.ExhibitionId,
+					&exhibition.Name,
+					&exhibition.Description,
+					&exhibition.StartDate,
+					&exhibition.CreatedDate,
+					&exhibition.Owner.FirstName,
+					&exhibition.Owner.LastName,
+					&exhibition.Owner.Email,
+					&exhibition.Owner.DateOfBirth,
+					&exhibition.Owner.IsActive,
+					&exhibition.Owner.UserId,
+					&exhibition.Owner.Phone,
+					&exhibition.Owner.UserName,
 				)
 				errCheck(err)
 
-				exhibitions = append(exhibitions, &Exhibition{
-					exhibitionId,
-					name,
-					string(description),
-					startDate,
-					createdDate,
-					User{
-						userId,
-						firstName,
-						lastName,
-						userName,
-						email,
-						phone,
-						dateOfBirth,
-						isActive,
-					},
-				})
+				exhibitions = append(exhibitions, &exhibition)
 			}
 
 			return exhibitions, nil
