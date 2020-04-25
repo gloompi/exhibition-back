@@ -19,11 +19,12 @@ func ReadSchema() *graphql.SchemaConfig {
 
 func readRootQuery() *graphql.Object {
 	fields := graphql.Fields{
-		"users":     readUsersSchema(),
-		"loginUser": readLoginUserSchema(),
-		"admins":    readAdminsSchema(),
-		"producers": readProducersSchema(),
-		"audience":  readAudienceSchema(),
+		"users":       readUsersSchema(),
+		"loginUser":   readLoginUserSchema(),
+		"admins":      readAdminsSchema(),
+		"producers":   readProducersSchema(),
+		"audience":    readAudienceSchema(),
+		"exhibitions": readExhibitionsSchema(),
 	}
 
 	return graphql.NewObject(graphql.ObjectConfig{Name: "RootQuery", Fields: fields})
@@ -31,9 +32,10 @@ func readRootQuery() *graphql.Object {
 
 func readRootMutation() *graphql.Object {
 	fields := graphql.Fields{
-		"createUser":    readCreateUserSchema(),
-		"addToAdmins":   readAddToAdminSchema(),
-		"addToProducer": readAddToProducerSchema(),
+		"createUser":       readCreateUserSchema(),
+		"createExhibition": readCreateExhibitionSchema(),
+		"addToAdmins":      readAddToAdminSchema(),
+		"addToProducer":    readAddToProducerSchema(),
 	}
 
 	return graphql.NewObject(graphql.ObjectConfig{Name: "RootMutation", Fields: fields})
