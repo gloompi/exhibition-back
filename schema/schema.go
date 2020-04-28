@@ -20,7 +20,6 @@ func ReadSchema() *graphql.SchemaConfig {
 func readRootQuery() *graphql.Object {
 	fields := graphql.Fields{
 		"users":       readUsersSchema(),
-		"loginUser":   readLoginUserSchema(),
 		"admins":      readAdminsSchema(),
 		"producers":   readProducersSchema(),
 		"audience":    readAudienceSchema(),

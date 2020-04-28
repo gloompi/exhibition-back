@@ -1,21 +1,25 @@
 package schema
 
 import (
-	"errors"
 	"fmt"
 	"github.com/graphql-go/graphql"
 	"online-exhibition.com/app/utils"
 )
 
 type User struct {
-	UserId      string         `json:"user_id"`
-	FirstName   string         `json:"first_name"`
-	LastName    string         `json:"last_name"`
-	UserName    string         `json:"user_name"`
-	Email       string         `json:"email"`
-	Phone       string	       `json:"phone"`
-	DateOfBirth string         `json:"date_of_birth"`
-	IsActive    bool           `json:"is_active"`
+	UserId      string `json:"user_id"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	UserName    string `json:"user_name"`
+	Email       string `json:"email"`
+	Phone       string `json:"phone"`
+	DateOfBirth string `json:"date_of_birth"`
+	IsActive    bool   `json:"is_active"`
+}
+
+type Token struct {
+	AccessToken string	`json:"access_token"`
+	RefreshToken string	`json:"refresh_token"`
 }
 
 var userType = graphql.NewObject(graphql.ObjectConfig{
@@ -29,6 +33,14 @@ var userType = graphql.NewObject(graphql.ObjectConfig{
 		"phone":       &graphql.Field{Type: graphql.String},
 		"dateOfBirth": &graphql.Field{Type: graphql.String},
 		"isActive":    &graphql.Field{Type: graphql.Boolean},
+	},
+})
+
+var tokenType = graphql.NewObject(graphql.ObjectConfig{
+	Name: "Token",
+	Fields: graphql.Fields{
+		"accessToken":    &graphql.Field{Type: graphql.String},
+		"refreshToken":   &graphql.Field{Type: graphql.String},
 	},
 })
 
@@ -64,7 +76,7 @@ func readUsersSchema() *graphql.Field {
 					&user.UserId,
 					&user.Phone,
 					&user.UserName,
-					)
+				)
 				errCheck(err)
 				users = append(users, &user)
 			}
@@ -131,58 +143,81 @@ func readCreateUserSchema() *graphql.Field {
 	}
 }
 
-func readLoginUserSchema() *graphql.Field {
-	return &graphql.Field{
-		Type: userType,
-		Args: graphql.FieldConfigArgument{
-			"userName": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
-			"password": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
-		},
-		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
-			userName, _ := params.Args["userName"].(string)
-			password, _ := params.Args["password"].(string)
-
-			query := fmt.Sprintf(`
-				select
-					user_id,
-					user_name,
-					password,
-					first_name,
-					last_name,
-					email,
-					phone,
-					date_of_birth,
-					is_active
-				from users
-				where user_name = '%v';
-			`, userName)
-			rows, err := connection.DB.Query(query)
-			errCheck(err)
-
-			var existingPassword []byte
-			var user User
-
-			for rows.Next() {
-				err = rows.Scan(
-					&user.UserId,
-					&user.UserName,
-					&existingPassword,
-					&user.FirstName,
-					&user.LastName,
-					&user.Email,
-					&user.Phone,
-					&user.DateOfBirth,
-					&user.IsActive,
-				)
-				errCheck(err)
-			}
-
-			correctPassword := utils.CheckPassword(existingPassword, password)
-			if correctPassword == false {
-				return nil, errors.New("wrong username or password")
-			}
-
-			return user, err
-		},
-	}
-}
+//func readLoginUserSchema() *graphql.Field {
+//	return &graphql.Field{
+//		Type: graphql.NewObject(graphql.ObjectConfig{
+//			Name: "LoginResponse",
+//			Fields: graphql.Fields{
+//				"user": 	&graphql.Field{Type: userType},
+//				"token": 	&graphql.Field{Type: tokenType},
+//			},
+//		}),
+//		Args: graphql.FieldConfigArgument{
+//			"userName": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+//			"password": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+//		},
+//		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+//			userName, _ := params.Args["userName"].(string)
+//			password, _ := params.Args["password"].(string)
+//
+//			query := fmt.Sprintf(`
+//				select
+//					user_id,
+//					user_name,
+//					password,
+//					first_name,
+//					last_name,
+//					email,
+//					phone,
+//					date_of_birth,
+//					is_active
+//				from users
+//				where user_name = '%v';
+//			`, userName)
+//			rows, err := connection.DB.Query(query)
+//			errCheck(err)
+//
+//			var existingPassword []byte
+//			var user User
+//
+//			for rows.Next() {
+//				err = rows.Scan(
+//					&user.UserId,
+//					&user.UserName,
+//					&existingPassword,
+//					&user.FirstName,
+//					&user.LastName,
+//					&user.Email,
+//					&user.Phone,
+//					&user.DateOfBirth,
+//					&user.IsActive,
+//				)
+//				errCheck(err)
+//			}
+//
+//			correctPassword := utils.CheckPassword(existingPassword, password)
+//			if correctPassword == false {
+//				return nil, errors.New("wrong username or password")
+//			}
+//			ts, err := utils.CreateToken(user.UserId)
+//			errCheck(err)
+//
+//			saveErr := utils.CreateAuth(user.UserId, ts)
+//			errCheck(saveErr)
+//
+//
+//			res := struct {
+//				User User
+//				Token Token
+//			} {
+//				user,
+//				Token{
+//					ts.AccessToken,
+//					ts.RefreshToken,
+//				},
+//			}
+//
+//			return res, nil
+//		},
+//	}
+//}

@@ -39,7 +39,7 @@ func readAdminsSchema() *graphql.Field {
 					&user.UserId,
 					&user.Phone,
 					&user.UserName,
-					)
+				)
 				errCheck(err)
 				admins = append(admins, &user)
 			}
