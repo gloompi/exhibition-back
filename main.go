@@ -62,7 +62,7 @@ func main() {
 	// route handlers
 	http.HandleFunc("/", handleIndex)
 	http.Handle("/private-playground", privatePlayground)
-	http.Handle("/graphql", publicHandler)
+	http.Handle("/graphql", CorsMiddleware(publicHandler))
 	http.Handle("/graphql/private", CorsMiddleware(TokenAuthMiddleware(privateHandler)))
 	log.Printf("Open the following URL in the browser: http://localhost:%d\n", conf.port)
 	log.Fatal(http.ListenAndServe(listenAt, nil))
