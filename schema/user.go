@@ -1,9 +1,12 @@
 package schema
 
 import (
+	"errors"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/graphql-go/graphql"
 	"online-exhibition.com/app/utils"
+	"os"
 )
 
 type User struct {
@@ -61,7 +64,9 @@ func readUsersSchema() *graphql.Field {
 				from users;
 			`)
 			rows, err := connection.DB.Query(query)
-			errCheck(err)
+			if err != nil {
+				return nil, err
+			}
 
 			var users []*User
 
@@ -78,6 +83,10 @@ func readUsersSchema() *graphql.Field {
 					&user.UserName,
 				)
 				errCheck(err)
+				if err != nil {
+					return nil, err
+				}
+
 				users = append(users, &user)
 			}
 
@@ -125,6 +134,10 @@ func readCreateUserSchema() *graphql.Field {
 
 			stmt, err := connection.DB.Prepare(query)
 			errCheck(err)
+			if err != nil {
+				return nil, err
+			}
+
 			defer stmt.Close()
 
 			_, err = stmt.Exec()
@@ -143,81 +156,194 @@ func readCreateUserSchema() *graphql.Field {
 	}
 }
 
-//func readLoginUserSchema() *graphql.Field {
-//	return &graphql.Field{
-//		Type: graphql.NewObject(graphql.ObjectConfig{
-//			Name: "LoginResponse",
-//			Fields: graphql.Fields{
-//				"user": 	&graphql.Field{Type: userType},
-//				"token": 	&graphql.Field{Type: tokenType},
-//			},
-//		}),
-//		Args: graphql.FieldConfigArgument{
-//			"userName": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
-//			"password": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
-//		},
-//		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
-//			userName, _ := params.Args["userName"].(string)
-//			password, _ := params.Args["password"].(string)
-//
-//			query := fmt.Sprintf(`
-//				select
-//					user_id,
-//					user_name,
-//					password,
-//					first_name,
-//					last_name,
-//					email,
-//					phone,
-//					date_of_birth,
-//					is_active
-//				from users
-//				where user_name = '%v';
-//			`, userName)
-//			rows, err := connection.DB.Query(query)
-//			errCheck(err)
-//
-//			var existingPassword []byte
-//			var user User
-//
-//			for rows.Next() {
-//				err = rows.Scan(
-//					&user.UserId,
-//					&user.UserName,
-//					&existingPassword,
-//					&user.FirstName,
-//					&user.LastName,
-//					&user.Email,
-//					&user.Phone,
-//					&user.DateOfBirth,
-//					&user.IsActive,
-//				)
-//				errCheck(err)
-//			}
-//
-//			correctPassword := utils.CheckPassword(existingPassword, password)
-//			if correctPassword == false {
-//				return nil, errors.New("wrong username or password")
-//			}
-//			ts, err := utils.CreateToken(user.UserId)
-//			errCheck(err)
-//
-//			saveErr := utils.CreateAuth(user.UserId, ts)
-//			errCheck(saveErr)
-//
-//
-//			res := struct {
-//				User User
-//				Token Token
-//			} {
-//				user,
-//				Token{
-//					ts.AccessToken,
-//					ts.RefreshToken,
-//				},
-//			}
-//
-//			return res, nil
-//		},
-//	}
-//}
+func readLoginUserSchema() *graphql.Field {
+	return &graphql.Field{
+		Type: graphql.NewObject(graphql.ObjectConfig{
+			Name: "LoginResponse",
+			Fields: graphql.Fields{
+				"user": 	&graphql.Field{Type: userType},
+				"token": 	&graphql.Field{Type: tokenType},
+			},
+		}),
+		Args: graphql.FieldConfigArgument{
+			"userName": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+			"password": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+		},
+		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+			userName, _ := params.Args["userName"].(string)
+			password, _ := params.Args["password"].(string)
+
+			query := fmt.Sprintf(`
+				select
+					user_id,
+					user_name,
+					password,
+					first_name,
+					last_name,
+					email,
+					phone,
+					date_of_birth,
+					is_active
+				from users
+				where user_name = '%v';
+			`, userName)
+			rows, err := connection.DB.Query(query)
+			if err != nil {
+				return nil, err
+			}
+
+			var existingPassword []byte
+			var user User
+
+			for rows.Next() {
+				err = rows.Scan(
+					&user.UserId,
+					&user.UserName,
+					&existingPassword,
+					&user.FirstName,
+					&user.LastName,
+					&user.Email,
+					&user.Phone,
+					&user.DateOfBirth,
+					&user.IsActive,
+				)
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			correctPassword := utils.CheckPassword(existingPassword, password)
+			if correctPassword == false {
+				return nil, errors.New("wrong username or password")
+			}
+			ts, err := utils.CreateToken(user.UserId)
+			if err != nil {
+				return nil, err
+			}
+
+			err = utils.CreateAuth(user.UserId, ts)
+			if err != nil {
+				return nil, err
+			}
+
+			res := struct {
+				User User
+				Token Token
+			} {
+				user,
+				Token{
+					ts.AccessToken,
+					ts.RefreshToken,
+				},
+			}
+
+			return res, nil
+		},
+	}
+}
+
+func readLogoutSchema() *graphql.Field {
+	return &graphql.Field{
+		Type: graphql.NewObject(graphql.ObjectConfig{
+			Name: "LogoutResponse",
+			Fields: graphql.Fields{
+				"deleted": 	&graphql.Field{Type: graphql.Int},
+			},
+		}),
+		Args: graphql.FieldConfigArgument{
+			"token": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+		},
+		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+			token, _ := params.Args["token"].(string)
+
+			au, err := utils.ExtractTokenMetadataString(token)
+			if err != nil {
+				return nil, err
+			}
+
+			deleted, err := utils.DeleteAuth(au.AccessUuid)
+			if err != nil || deleted == 0 {
+				return nil, err
+			}
+
+			return struct {
+				Deleted int64
+			}{
+				deleted,
+			}, nil
+		},
+	}
+}
+
+func readRefreshTokenSchema() *graphql.Field {
+	return &graphql.Field{
+		Type: graphql.NewObject(graphql.ObjectConfig{
+			Name: "RefreshTokenResponse",
+			Fields: graphql.Fields{
+				"token": 	&graphql.Field{Type: tokenType},
+			},
+		}),
+		Args: graphql.FieldConfigArgument{
+			"refreshToken": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+		},
+		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+			refreshToken, _ := params.Args["refreshToken"].(string)
+
+			token, err := jwt.Parse(refreshToken, func(token *jwt.Token) (interface{}, error) {
+				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+				}
+				return  []byte(os.Getenv("REFRESH_SECRET")),  nil
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			if _, ok := token.Claims.(jwt.Claims); !ok && !token.Valid {
+				return nil, errors.New("unauthorized")
+			}
+
+			claims, ok := token.Claims.(jwt.MapClaims)
+			if ok && token.Valid {
+				refreshUuid, ok := claims["refresh_uuid"].(string)
+				if !ok {
+					return nil, errors.New("failed to get `refresh_uuid`")
+				}
+
+				userId, ok := claims["user_id"].(string)
+				if !ok {
+					return nil, errors.New("failed to get `user_id`")
+				}
+
+				deleted, err := utils.DeleteAuth(refreshUuid)
+				if err != nil || deleted == 0 {
+					return nil, errors.New("failed to delete old `refresh token`")
+				}
+
+				ts, err := utils.CreateToken(userId)
+				if err != nil {
+					return nil, errors.New("failed to create new token")
+				}
+
+				err = utils.CreateAuth(userId, ts)
+				if err != nil {
+					return nil, err
+				}
+
+				res := struct {
+					Token Token
+				} {
+					Token{
+						ts.AccessToken,
+						ts.RefreshToken,
+					},
+				}
+
+				return res, nil
+			} else {
+				return nil, errors.New("refresh token expired")
+			}
+		},
+	}
+}

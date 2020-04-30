@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/twinj/uuid"
@@ -40,6 +41,7 @@ func CreateToken(userId string) (*TokenDetails, error) {
 	atClaims["access_uuid"] = td.AccessUuid
 	atClaims["user_id"] = userId
 	atClaims["exp"] = td.AtExpires
+
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
 	td.AccessToken, err = at.SignedString([]byte(os.Getenv("ACCESS_SECRET")))
 	if err != nil {
@@ -50,11 +52,13 @@ func CreateToken(userId string) (*TokenDetails, error) {
 	rtClaims["refresh_uuid"] = td.RefreshUuid
 	rtClaims["user_id"] = userId
 	rtClaims["exp"] = td.RtExpires
+
 	rt := jwt.NewWithClaims(jwt.SigningMethodHS256, rtClaims)
 	td.RefreshToken, err = rt.SignedString([]byte(os.Getenv("REFRESH_SECRET")))
 	if err != nil {
 		return nil, err
 	}
+
 	return td, nil
 }
 
@@ -71,10 +75,11 @@ func CreateAuth(userId string, td *TokenDetails) error {
 	if errRefresh != nil {
 		return errRefresh
 	}
+
 	return nil
 }
 
-func DeleteAuth(givenUuid string) (int64,error) {
+func DeleteAuth(givenUuid string) (int64, error) {
 	deleted, err := client.Del(givenUuid).Result()
 	if err != nil {
 		return 0, err
@@ -83,12 +88,13 @@ func DeleteAuth(givenUuid string) (int64,error) {
 }
 
 func TokenValid(req *http.Request) error {
-	token, err := VerifyToken(req)
+	tokenAuth, err := ExtractTokenMetadata(req)
 	if err != nil {
 		return err
 	}
 
-	if _, ok := token.Claims.(jwt.Claims); !ok && !token.Valid {
+	_, err = FetchAuth(tokenAuth)
+	if err != nil {
 		return err
 	}
 
@@ -105,13 +111,12 @@ func ExtractTokenMetadata(req *http.Request) (*AccessDetails, error) {
 	if ok && token.Valid {
 		accessUuid, ok := claims["access_uuid"].(string)
 		if !ok {
-			return nil, err
+			return nil, errors.New("access uuid didn't found")
 		}
 
 		userId, ok := claims["user_id"].(string)
 		if !ok {
-			var err error
-			return nil, err
+			return nil, errors.New("no user id provided")
 		}
 
 		return &AccessDetails{
@@ -119,6 +124,7 @@ func ExtractTokenMetadata(req *http.Request) (*AccessDetails, error) {
 			UserId:   	userId,
 		}, nil
 	}
+
 	return nil, err
 }
 
@@ -158,5 +164,39 @@ func ExtractToken(req *http.Request) string {
 	}
 
 	return ""
+}
+
+func ExtractTokenMetadataString(token string) (*AccessDetails, error) {
+	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		//Make sure that the token method conform to "SigningMethodHMAC"
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(os.Getenv("ACCESS_SECRET")), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	claims, ok := parsedToken.Claims.(jwt.MapClaims)
+	if ok && parsedToken.Valid {
+		accessUuid, ok := claims["access_uuid"].(string)
+		if !ok {
+			return nil, errors.New("access uuid didn't found")
+		}
+
+		userId, ok := claims["user_id"].(string)
+		if !ok {
+			return nil, errors.New("no user id provided")
+		}
+
+		return &AccessDetails{
+			AccessUuid: accessUuid,
+			UserId:   	userId,
+		}, nil
+	}
+
+	return nil, err
 }
 
