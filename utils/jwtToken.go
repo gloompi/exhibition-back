@@ -62,6 +62,28 @@ func CreateToken(userId string) (*TokenDetails, error) {
 	return td, nil
 }
 
+func CreateLiveToken(userId string) (*TokenDetails, error) {
+	td := &TokenDetails{}
+	td.AtExpires = time.Now().Add(time.Hour * 24 * 31 * 12).Unix()
+	td.AccessUuid = uuid.NewV4().String()
+
+	var err error
+
+	atClaims := jwt.MapClaims{}
+	atClaims["authorized"] = true
+	atClaims["access_uuid"] = td.AccessUuid
+	atClaims["user_id"] = userId
+	atClaims["exp"] = td.AtExpires
+
+	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
+	td.AccessToken, err = at.SignedString([]byte(os.Getenv("ACCESS_SECRET")))
+	if err != nil {
+		return nil, err
+	}
+
+	return td, nil
+}
+
 func CreateAuth(userId string, td *TokenDetails) error {
 	at := time.Unix(td.AtExpires, 0) //converting Unix to UTC(to Time object)
 	rt := time.Unix(td.RtExpires, 0)

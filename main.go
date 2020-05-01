@@ -61,6 +61,7 @@ func main() {
 
 	// route handlers
 	http.HandleFunc("/", handleIndex)
+	http.HandleFunc("/generate-live-token", handleLiveToken)
 	http.Handle("/private-playground", privatePlayground)
 	http.Handle("/graphql", CorsMiddleware(publicHandler))
 	http.Handle("/graphql/private", CorsMiddleware(TokenAuthMiddleware(privateHandler)))
@@ -70,6 +71,29 @@ func main() {
 
 func handleIndex(w http.ResponseWriter, req *http.Request) {
 	io.WriteString(w, "You are doing Great!")
+}
+
+func handleLiveToken(w http.ResponseWriter, req * http.Request) {
+	userId, ok := req.URL.Query()["userId"]
+
+	if !ok || len(userId[0]) < 1 {
+		io.WriteString(w, "Please provide correct user id")
+		return
+	}
+
+	td, err := utils.CreateLiveToken(userId[0])
+	if err != nil {
+		io.WriteString(w, "Failed while creating a token")
+		return
+	}
+
+	err = utils.CreateAuth(userId[0], td)
+	if err != nil {
+		io.WriteString(w, "Failed while creating an auth")
+		return
+	}
+
+	io.WriteString(w, "Everything is fine, here is your token " + td.AccessToken)
 }
 
 func TokenAuthMiddleware(next http.Handler) http.Handler {
