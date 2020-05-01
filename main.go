@@ -74,6 +74,12 @@ func handleIndex(w http.ResponseWriter, req *http.Request) {
 
 func TokenAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		// avoid auth check for OPTION method
+		if req.Method == http.MethodOptions {
+			next.ServeHTTP(w, req)
+			return
+		}
+
 		err := utils.TokenValid(req)
 		if err != nil {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
@@ -89,7 +95,8 @@ func CorsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		// allow cross domain AJAX requests
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE, PUT")
+		w.Header().Set("Access-Control-Allow-Headers", "Authorization,Origin,X-Requested-With,Content-Type,Accept")
 		next.ServeHTTP(w, req)
 	})
 }
