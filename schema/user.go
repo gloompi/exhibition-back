@@ -133,7 +133,6 @@ func readCreateUserSchema() *graphql.Field {
 				`, firstName, lastName, email, dateOfBirth, isActive, phone, string(hashedPassword), userName)
 
 			stmt, err := connection.DB.Prepare(query)
-			errCheck(err)
 			if err != nil {
 				return nil, err
 			}
