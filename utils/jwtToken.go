@@ -20,10 +20,9 @@ type TokenDetails struct {
 	RtExpires    int64
 }
 
-
 type AccessDetails struct {
-	AccessUuid 	string
-	UserId   	string
+	AccessUuid string
+	UserId     string
 }
 
 func CreateToken(userId string) (*TokenDetails, error) {
@@ -143,7 +142,7 @@ func ExtractTokenMetadata(req *http.Request) (*AccessDetails, error) {
 
 		return &AccessDetails{
 			AccessUuid: accessUuid,
-			UserId:   	userId,
+			UserId:     userId,
 		}, nil
 	}
 
@@ -215,10 +214,9 @@ func ExtractTokenMetadataString(token string) (*AccessDetails, error) {
 
 		return &AccessDetails{
 			AccessUuid: accessUuid,
-			UserId:   	userId,
+			UserId:     userId,
 		}, nil
 	}
 
 	return nil, err
 }
-

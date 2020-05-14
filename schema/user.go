@@ -21,8 +21,8 @@ type User struct {
 }
 
 type Token struct {
-	AccessToken string	`json:"access_token"`
-	RefreshToken string	`json:"refresh_token"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 var userType = graphql.NewObject(graphql.ObjectConfig{
@@ -42,8 +42,8 @@ var userType = graphql.NewObject(graphql.ObjectConfig{
 var tokenType = graphql.NewObject(graphql.ObjectConfig{
 	Name: "Token",
 	Fields: graphql.Fields{
-		"accessToken":    &graphql.Field{Type: graphql.String},
-		"refreshToken":   &graphql.Field{Type: graphql.String},
+		"accessToken":  &graphql.Field{Type: graphql.String},
+		"refreshToken": &graphql.Field{Type: graphql.String},
 	},
 })
 
@@ -160,8 +160,8 @@ func readLoginUserSchema() *graphql.Field {
 		Type: graphql.NewObject(graphql.ObjectConfig{
 			Name: "LoginResponse",
 			Fields: graphql.Fields{
-				"user": 	&graphql.Field{Type: userType},
-				"token": 	&graphql.Field{Type: tokenType},
+				"user":  &graphql.Field{Type: userType},
+				"token": &graphql.Field{Type: tokenType},
 			},
 		}),
 		Args: graphql.FieldConfigArgument{
@@ -226,9 +226,9 @@ func readLoginUserSchema() *graphql.Field {
 			}
 
 			res := struct {
-				User User
+				User  User
 				Token Token
-			} {
+			}{
 				user,
 				Token{
 					ts.AccessToken,
@@ -246,7 +246,7 @@ func readLogoutSchema() *graphql.Field {
 		Type: graphql.NewObject(graphql.ObjectConfig{
 			Name: "LogoutResponse",
 			Fields: graphql.Fields{
-				"deleted": 	&graphql.Field{Type: graphql.Int},
+				"deleted": &graphql.Field{Type: graphql.Int},
 			},
 		}),
 		Args: graphql.FieldConfigArgument{
@@ -279,7 +279,7 @@ func readRefreshTokenSchema() *graphql.Field {
 		Type: graphql.NewObject(graphql.ObjectConfig{
 			Name: "RefreshTokenResponse",
 			Fields: graphql.Fields{
-				"token": 	&graphql.Field{Type: tokenType},
+				"token": &graphql.Field{Type: tokenType},
 			},
 		}),
 		Args: graphql.FieldConfigArgument{
@@ -292,7 +292,7 @@ func readRefreshTokenSchema() *graphql.Field {
 				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 					return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 				}
-				return  []byte(os.Getenv("REFRESH_SECRET")),  nil
+				return []byte(os.Getenv("REFRESH_SECRET")), nil
 			})
 
 			if err != nil {
@@ -332,7 +332,7 @@ func readRefreshTokenSchema() *graphql.Field {
 
 				res := struct {
 					Token Token
-				} {
+				}{
 					Token{
 						ts.AccessToken,
 						ts.RefreshToken,

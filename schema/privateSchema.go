@@ -19,8 +19,8 @@ func ReadPrivateSchema() *graphql.SchemaConfig {
 
 func privateRootQuery() *graphql.Object {
 	fields := graphql.Fields{
-		"admins":      readAdminsSchema(),
-		"logout": 	   readLogoutSchema(),
+		"admins": readAdminsSchema(),
+		"logout": readLogoutSchema(),
 	}
 
 	return graphql.NewObject(graphql.ObjectConfig{Name: "RootQuery", Fields: fields})

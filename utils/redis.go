@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-var  client *redis.Client
+var client *redis.Client
 
 func init() {
 	//Initializing redis
@@ -21,7 +21,7 @@ func init() {
 	}
 
 	client = redis.NewClient(&redis.Options{
-		Addr: redisAddr,
+		Addr:     redisAddr,
 		Password: redisPass,
 	})
 	_, err := client.Ping().Result()

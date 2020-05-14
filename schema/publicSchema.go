@@ -27,8 +27,8 @@ func publicRootQuery() *graphql.Object {
 
 func publicRootMutation() *graphql.Object {
 	fields := graphql.Fields{
-		"createUser":       readCreateUserSchema(),
-		"refreshToken":     readRefreshTokenSchema(),
+		"createUser":   readCreateUserSchema(),
+		"refreshToken": readRefreshTokenSchema(),
 	}
 
 	return graphql.NewObject(graphql.ObjectConfig{Name: "RootMutation", Fields: fields})

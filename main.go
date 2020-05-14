@@ -73,7 +73,7 @@ func handleIndex(w http.ResponseWriter, req *http.Request) {
 	io.WriteString(w, "You are doing Great!")
 }
 
-func handleLiveToken(w http.ResponseWriter, req * http.Request) {
+func handleLiveToken(w http.ResponseWriter, req *http.Request) {
 	userId, ok := req.URL.Query()["userId"]
 
 	if !ok || len(userId[0]) < 1 {
@@ -93,7 +93,7 @@ func handleLiveToken(w http.ResponseWriter, req * http.Request) {
 		return
 	}
 
-	io.WriteString(w, "Everything is fine, here is your token " + td.AccessToken)
+	io.WriteString(w, "Everything is fine, here is your token "+td.AccessToken)
 }
 
 func TokenAuthMiddleware(next http.Handler) http.Handler {

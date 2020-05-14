@@ -30,8 +30,15 @@ var exhibitionType = graphql.NewObject(graphql.ObjectConfig{
 func readExhibitionsSchema() *graphql.Field {
 	return &graphql.Field{
 		Type: graphql.NewList(exhibitionType),
+		Args: graphql.FieldConfigArgument{
+			"limit":        &graphql.ArgumentConfig{Type: graphql.Int},
+			"offset":		&graphql.ArgumentConfig{Type: graphql.Int},
+		},
 		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
-			query := fmt.Sprintln(`
+			limit, ok := params.Args["limit"].(int)
+			offset, _ := params.Args["offset"].(int)
+
+			queryString := `
 				select
 					exhibition_id,
 					name,
@@ -48,9 +55,20 @@ func readExhibitionsSchema() *graphql.Field {
 					user_name
 				from exhibitions ex
 					inner join users u
-						on ex.owner_id = u.user_id;
-			`)
+						on ex.owner_id = u.user_id
+				order by created_date desc
+			`
+
+			query := fmt.Sprintf(queryString + `
+				limit %v offset %v;
+			`, limit, offset)
+
+			if !ok {
+				query = queryString
+			}
+
 			rows, err := connection.DB.Query(query)
+
 			errCheck(err)
 
 			var exhibitions []*Exhibition
