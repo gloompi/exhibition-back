@@ -66,6 +66,12 @@ func readProducersSchema() *graphql.Field {
 	return &graphql.Field{
 		Type: graphql.NewList(userType),
 		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+			req := params.Context.Value("request").(*http.Request)
+			_, err := utils.TokenValid(req)
+			if err != nil {
+				return nil, err
+			}
+
 			query := fmt.Sprintln(`
 				select
 					first_name,
@@ -115,6 +121,12 @@ func readAudienceSchema() *graphql.Field {
 	return &graphql.Field{
 		Type: graphql.NewList(userType),
 		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+			req := params.Context.Value("request").(*http.Request)
+			_, err := utils.TokenValid(req)
+			if err != nil {
+				return nil, err
+			}
+
 			query := fmt.Sprintln(`
 				select
 					first_name,

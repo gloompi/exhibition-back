@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"errors"
 	"fmt"
 	"github.com/graphql-go/graphql"
 	"net/http"
@@ -9,12 +10,12 @@ import (
 )
 
 type Exhibition struct {
-	ExhibitionId string `json:"exhibition_id"`
-	Name         string `json:"name"`
-	Description  string `json:"description"`
-	StartDate    string `json:"start_date"`
-	CreatedDate  string `json:"created_date"`
-	Owner        User   `json:"owner"`
+	ExhibitionId string `json:"exhibition_id,omitempty"`
+	Name         string `json:"name,omitempty"`
+	Description  string `json:"description,omitempty"`
+	StartDate    string `json:"start_date,omitempty"`
+	CreatedDate  string `json:"created_date,omitempty"`
+	OwnerId      string `json:"owner_id,omitempty"`
 }
 
 var exhibitionType = graphql.NewObject(graphql.ObjectConfig{
@@ -25,7 +26,55 @@ var exhibitionType = graphql.NewObject(graphql.ObjectConfig{
 		"description":  &graphql.Field{Type: graphql.String},
 		"startDate":    &graphql.Field{Type: graphql.String},
 		"createdDate":  &graphql.Field{Type: graphql.String},
-		"owner":        &graphql.Field{Type: userType},
+		"owner":        &graphql.Field{
+			Type: userType,
+			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+				exhibition, ok := params.Source.(*Exhibition)
+				if !ok {
+					return nil, errors.New("were not able to get the exhibition")
+				}
+
+				query := fmt.Sprintf(`
+					select
+						first_name,
+						last_name,
+						email,
+						date_of_birth,
+						is_active,
+						user_id,
+						phone,
+						user_name
+					from users u
+					where u.user_id = %v;
+				`, exhibition.OwnerId)
+
+				rows, err := connection.DB.Query(query)
+				if err != nil {
+					return nil, err
+				}
+
+				var user User
+
+				for rows.Next() {
+					err := rows.Scan(
+						&user.FirstName,
+						&user.LastName,
+						&user.Email,
+						&user.DateOfBirth,
+						&user.IsActive,
+						&user.UserId,
+						&user.Phone,
+						&user.UserName,
+					)
+
+					if err != nil {
+						return nil, err
+					}
+				}
+
+				return user, nil
+			},
+		},
 	},
 })
 
@@ -37,7 +86,6 @@ func readExhibitionsSchema() *graphql.Field {
 			"offset": &graphql.ArgumentConfig{Type: graphql.Int},
 		},
 		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
-			fmt.Println(params.Source)
 			limit, ok := params.Args["limit"].(int)
 			offset, _ := params.Args["offset"].(int)
 
@@ -48,17 +96,8 @@ func readExhibitionsSchema() *graphql.Field {
 					description,
 					start_date,
 					created_date,
-					first_name,
-					last_name,
-					email,
-					date_of_birth,
-					is_active,
-					user_id,
-					phone,
-					user_name
+					owner_id
 				from exhibitions ex
-					inner join users u
-						on ex.owner_id = u.user_id
 				order by created_date desc
 			`
 
@@ -86,14 +125,7 @@ func readExhibitionsSchema() *graphql.Field {
 					&exhibition.Description,
 					&exhibition.StartDate,
 					&exhibition.CreatedDate,
-					&exhibition.Owner.FirstName,
-					&exhibition.Owner.LastName,
-					&exhibition.Owner.Email,
-					&exhibition.Owner.DateOfBirth,
-					&exhibition.Owner.IsActive,
-					&exhibition.Owner.UserId,
-					&exhibition.Owner.Phone,
-					&exhibition.Owner.UserName,
+					&exhibition.OwnerId,
 				)
 				if err != nil {
 					return nil, err
