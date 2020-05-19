@@ -3,6 +3,8 @@ package schema
 import (
 	"fmt"
 	"github.com/graphql-go/graphql"
+	"net/http"
+	"online-exhibition.com/app/utils"
 	"strings"
 )
 
@@ -31,8 +33,8 @@ func readExhibitionsSchema() *graphql.Field {
 	return &graphql.Field{
 		Type: graphql.NewList(exhibitionType),
 		Args: graphql.FieldConfigArgument{
-			"limit":        &graphql.ArgumentConfig{Type: graphql.Int},
-			"offset":		&graphql.ArgumentConfig{Type: graphql.Int},
+			"limit":  &graphql.ArgumentConfig{Type: graphql.Int},
+			"offset": &graphql.ArgumentConfig{Type: graphql.Int},
 		},
 		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
 			limit, ok := params.Args["limit"].(int)
@@ -59,7 +61,7 @@ func readExhibitionsSchema() *graphql.Field {
 				order by created_date desc
 			`
 
-			query := fmt.Sprintf(queryString + `
+			query := fmt.Sprintf(queryString+`
 				limit %v offset %v;
 			`, limit, offset)
 
@@ -68,8 +70,9 @@ func readExhibitionsSchema() *graphql.Field {
 			}
 
 			rows, err := connection.DB.Query(query)
-
-			errCheck(err)
+			if err != nil {
+				return nil, err
+			}
 
 			var exhibitions []*Exhibition
 
@@ -91,7 +94,9 @@ func readExhibitionsSchema() *graphql.Field {
 					&exhibition.Owner.Phone,
 					&exhibition.Owner.UserName,
 				)
-				errCheck(err)
+				if err != nil {
+					return nil, err
+				}
 
 				exhibitions = append(exhibitions, &exhibition)
 			}
@@ -116,6 +121,12 @@ func readCreateExhibitionSchema() *graphql.Field {
 			"ownerId":     &graphql.ArgumentConfig{Type: graphql.String},
 		},
 		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+			req := params.Context.Value("request").(*http.Request)
+			_, err := utils.TokenValid(req)
+			if err != nil {
+				return nil, err
+			}
+
 			name, _ := params.Args["name"].(string)
 			description, _ := params.Args["description"].(string)
 			startDate, _ := params.Args["startDate"].(string)
@@ -128,7 +139,10 @@ func readCreateExhibitionSchema() *graphql.Field {
 				`, name, description, startDate, ownerId)
 
 			stmt, err := connection.DB.Prepare(query)
-			errCheck(err)
+			if err != nil {
+				return nil, err
+			}
+
 			defer stmt.Close()
 
 			_, err = stmt.Exec()

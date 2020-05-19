@@ -3,6 +3,8 @@ package schema
 import (
 	"fmt"
 	"github.com/graphql-go/graphql"
+	"net/http"
+	"online-exhibition.com/app/utils"
 )
 
 // QUERIES
@@ -10,6 +12,12 @@ func readAdminsSchema() *graphql.Field {
 	return &graphql.Field{
 		Type: graphql.NewList(userType),
 		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+			req := params.Context.Value("request").(*http.Request)
+			_, err := utils.TokenValid(req)
+			if err != nil {
+				return nil, err
+			}
+
 			query := fmt.Sprintln(`
 				select
 					first_name,
@@ -24,7 +32,9 @@ func readAdminsSchema() *graphql.Field {
 					inner join users using(user_id);
 			`)
 			rows, err := connection.DB.Query(query)
-			errCheck(err)
+			if err != nil {
+				return nil, err
+			}
 
 			var admins []*User
 
@@ -40,7 +50,10 @@ func readAdminsSchema() *graphql.Field {
 					&user.Phone,
 					&user.UserName,
 				)
-				errCheck(err)
+				if err != nil {
+					return nil, err
+				}
+
 				admins = append(admins, &user)
 			}
 
@@ -67,7 +80,9 @@ func readProducersSchema() *graphql.Field {
 					inner join users using(user_id);
 			`)
 			rows, err := connection.DB.Query(query)
-			errCheck(err)
+			if err != nil {
+				return nil, err
+			}
 
 			var producers []*User
 
@@ -84,7 +99,10 @@ func readProducersSchema() *graphql.Field {
 					&user.UserName,
 				)
 
-				errCheck(err)
+				if err != nil {
+					return nil, err
+				}
+
 				producers = append(producers, &user)
 			}
 
@@ -115,7 +133,9 @@ func readAudienceSchema() *graphql.Field {
 						(select user_id from producers);
 			`)
 			rows, err := connection.DB.Query(query)
-			errCheck(err)
+			if err != nil {
+				return nil, err
+			}
 
 			var audience []*User
 
@@ -132,7 +152,10 @@ func readAudienceSchema() *graphql.Field {
 					&user.UserName,
 				)
 
-				errCheck(err)
+				if err != nil {
+					return nil, err
+				}
+
 				audience = append(audience, &user)
 			}
 
@@ -154,6 +177,12 @@ func readAddToAdminSchema() *graphql.Field {
 			"userId": &graphql.ArgumentConfig{Type: graphql.String},
 		},
 		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+			req := params.Context.Value("request").(*http.Request)
+			_, err := utils.TokenValid(req)
+			if err != nil {
+				return nil, err
+			}
+
 			userId, _ := params.Args["userId"].(string)
 
 			query := fmt.Sprintf(`
@@ -162,7 +191,10 @@ func readAddToAdminSchema() *graphql.Field {
 				`, userId)
 
 			stmt, err := connection.DB.Prepare(query)
-			errCheck(err)
+			if err != nil {
+				return nil, err
+			}
+
 			defer stmt.Close()
 
 			_, err = stmt.Exec()
@@ -193,6 +225,12 @@ func readAddToProducerSchema() *graphql.Field {
 			"userId": &graphql.ArgumentConfig{Type: graphql.String},
 		},
 		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+			req := params.Context.Value("request").(*http.Request)
+			_, err := utils.TokenValid(req)
+			if err != nil {
+				return nil, err
+			}
+
 			userId, _ := params.Args["userId"].(string)
 
 			query := fmt.Sprintf(`
@@ -201,7 +239,10 @@ func readAddToProducerSchema() *graphql.Field {
 				`, userId)
 
 			stmt, err := connection.DB.Prepare(query)
-			errCheck(err)
+			if err != nil {
+				return nil, err
+			}
+
 			defer stmt.Close()
 
 			_, err = stmt.Exec()

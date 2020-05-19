@@ -2,42 +2,42 @@ package schema
 
 import (
 	"github.com/graphql-go/graphql"
-	"log"
 	"online-exhibition.com/app/dbConnection"
 )
 
 var connection = dbConnection.ReadConnection()
 
-func ReadPrivateSchema() *graphql.SchemaConfig {
+func ReadSchema() *graphql.SchemaConfig {
 	schemaConfig := graphql.SchemaConfig{
-		Query:    privateRootQuery(),
-		Mutation: privateRootMutation(),
+		Query:    rootQuery(),
+		Mutation: rootMutation(),
 	}
 
 	return &schemaConfig
 }
 
-func privateRootQuery() *graphql.Object {
+func rootQuery() *graphql.Object {
 	fields := graphql.Fields{
-		"admins": readAdminsSchema(),
-		"logout": readLogoutSchema(),
+		"users":       readUsersSchema(),
+		"producers":   readProducersSchema(),
+		"audience":    readAudienceSchema(),
+		"exhibitions": readExhibitionsSchema(),
+		"loginUser":   readLoginUserSchema(),
+		"admins":      readAdminsSchema(),
+		"logout":      readLogoutSchema(),
 	}
 
 	return graphql.NewObject(graphql.ObjectConfig{Name: "RootQuery", Fields: fields})
 }
 
-func privateRootMutation() *graphql.Object {
+func rootMutation() *graphql.Object {
 	fields := graphql.Fields{
+		"createUser":       readCreateUserSchema(),
+		"refreshToken":     readRefreshTokenSchema(),
 		"createExhibition": readCreateExhibitionSchema(),
 		"addToAdmins":      readAddToAdminSchema(),
 		"addToProducer":    readAddToProducerSchema(),
 	}
 
 	return graphql.NewObject(graphql.ObjectConfig{Name: "RootMutation", Fields: fields})
-}
-
-func errCheck(err error) {
-	if err != nil {
-		log.Fatalln(err)
-	}
 }

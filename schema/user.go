@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/graphql-go/graphql"
+	"net/http"
 	"online-exhibition.com/app/utils"
 	"os"
 )
@@ -82,7 +83,6 @@ func readUsersSchema() *graphql.Field {
 					&user.Phone,
 					&user.UserName,
 				)
-				errCheck(err)
 				if err != nil {
 					return nil, err
 				}
@@ -253,6 +253,12 @@ func readLogoutSchema() *graphql.Field {
 			"token": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
 		},
 		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+			req := params.Context.Value("request").(*http.Request)
+			_, err := utils.TokenValid(req)
+			if err != nil {
+				return nil, err
+			}
+
 			token, _ := params.Args["token"].(string)
 
 			au, err := utils.ExtractTokenMetadataString(token)

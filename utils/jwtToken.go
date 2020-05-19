@@ -108,18 +108,18 @@ func DeleteAuth(givenUuid string) (int64, error) {
 	return deleted, nil
 }
 
-func TokenValid(req *http.Request) error {
+func TokenValid(req *http.Request) (string, error) {
 	tokenAuth, err := ExtractTokenMetadata(req)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	_, err = FetchAuth(tokenAuth)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return tokenAuth.UserId, nil
 }
 
 func ExtractTokenMetadata(req *http.Request) (*AccessDetails, error) {
