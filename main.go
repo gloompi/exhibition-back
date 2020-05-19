@@ -42,15 +42,10 @@ func main() {
 	})
 
 	// route handlers
-	http.HandleFunc("/", handleIndex)
 	http.HandleFunc("/generate-live-token", handleLiveToken)
 	http.Handle("/graphql", corsMiddleware(requestMiddleware(h)))
 	log.Printf("Open the following URL in the browser: http://localhost:%d\n", conf.port)
 	log.Fatal(http.ListenAndServe(listenAt, nil))
-}
-
-func handleIndex(w http.ResponseWriter, req *http.Request) {
-	io.WriteString(w, "You are doing Great!")
 }
 
 // Provide request instance through context

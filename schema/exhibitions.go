@@ -37,6 +37,7 @@ func readExhibitionsSchema() *graphql.Field {
 			"offset": &graphql.ArgumentConfig{Type: graphql.Int},
 		},
 		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+			fmt.Println(params.Source)
 			limit, ok := params.Args["limit"].(int)
 			offset, _ := params.Args["offset"].(int)
 
