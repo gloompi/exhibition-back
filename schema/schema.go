@@ -1,8 +1,8 @@
 package schema
 
 import (
+	"github.com/gloompi/tantora-back/app/dbConnection"
 	"github.com/graphql-go/graphql"
-	"online-exhibition.com/app/dbConnection"
 )
 
 var connection = dbConnection.ReadConnection()

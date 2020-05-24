@@ -3,9 +3,9 @@ package schema
 import (
 	"errors"
 	"fmt"
+	"github.com/gloompi/tantora-back/app/utils"
 	"github.com/graphql-go/graphql"
 	"net/http"
-	"online-exhibition.com/app/utils"
 	"strings"
 )
 
@@ -26,7 +26,7 @@ var exhibitionType = graphql.NewObject(graphql.ObjectConfig{
 		"description":  &graphql.Field{Type: graphql.String},
 		"startDate":    &graphql.Field{Type: graphql.String},
 		"createdDate":  &graphql.Field{Type: graphql.String},
-		"owner":        &graphql.Field{
+		"owner": &graphql.Field{
 			Type: userType,
 			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
 				exhibition, ok := params.Source.(*Exhibition)

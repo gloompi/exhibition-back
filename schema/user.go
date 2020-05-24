@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gloompi/tantora-back/app/utils"
 	"github.com/graphql-go/graphql"
 	"net/http"
-	"online-exhibition.com/app/utils"
 	"os"
 )
 

@@ -4,14 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/gloompi/tantora-back/app/dbConnection"
+	schemaPkg "github.com/gloompi/tantora-back/app/schema"
+	"github.com/gloompi/tantora-back/app/utils"
 	"github.com/graphql-go/graphql"
 	"github.com/graphql-go/handler"
 	"io"
 	"log"
 	"net/http"
-	"online-exhibition.com/app/dbConnection"
-	schemaPkg "online-exhibition.com/app/schema"
-	"online-exhibition.com/app/utils"
 )
 
 var conf config

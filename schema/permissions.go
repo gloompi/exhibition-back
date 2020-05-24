@@ -2,9 +2,9 @@ package schema
 
 import (
 	"fmt"
+	"github.com/gloompi/tantora-back/app/utils"
 	"github.com/graphql-go/graphql"
 	"net/http"
-	"online-exhibition.com/app/utils"
 )
 
 // QUERIES

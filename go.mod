@@ -1,4 +1,4 @@
-module online-exhibition.com/app
+module github.com/gloompi/tantora-back/app
 
 go 1.12
 
