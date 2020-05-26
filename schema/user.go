@@ -106,7 +106,7 @@ func readCreateUserSchema() *graphql.Field {
 		Type: graphql.NewObject(graphql.ObjectConfig{
 			Name: "CreateUserResponse",
 			Fields: graphql.Fields{
-				"status": &graphql.Field{Type: graphql.String},
+				"userId": &graphql.Field{Type: graphql.String},
 			},
 		}),
 		Args: graphql.FieldConfigArgument{
@@ -146,17 +146,28 @@ func readCreateUserSchema() *graphql.Field {
 			defer stmt.Close()
 
 			_, err = stmt.Exec()
-			res := struct {
-				Status string `json:"status"`
-			}{
-				Status: "bad",
+
+			if err != nil {
+				return nil, err
 			}
 
-			if err == nil {
-				res.Status = "ok"
+			query = fmt.Sprintf(`select user_id from users u where u.user_name = '%v';`, userName)
+
+			rows, err := connection.DB.Query(query)
+			if err != nil {
+				return nil, err
 			}
 
-			return res, err
+			var res struct { UserId string `json:"user_id"` }
+
+			for rows.Next() {
+				err = rows.Scan(&res.UserId)
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			return res, nil
 		},
 	}
 }
