@@ -106,7 +106,8 @@ func readCreateUserSchema() *graphql.Field {
 		Type: graphql.NewObject(graphql.ObjectConfig{
 			Name: "CreateUserResponse",
 			Fields: graphql.Fields{
-				"userId": &graphql.Field{Type: graphql.String},
+				"user":  &graphql.Field{Type: userType},
+				"token": &graphql.Field{Type: tokenType},
 			},
 		}),
 		Args: graphql.FieldConfigArgument{
@@ -151,20 +152,62 @@ func readCreateUserSchema() *graphql.Field {
 				return nil, err
 			}
 
-			query = fmt.Sprintf(`select user_id from users u where u.user_name = '%v';`, userName)
+			query = fmt.Sprintf(`
+				select
+					user_id,
+					user_name,
+					first_name,
+					last_name,
+					email,
+					phone,
+					date_of_birth,
+					is_active
+				from users u where u.user_name = '%v';
+			`, userName)
 
 			rows, err := connection.DB.Query(query)
 			if err != nil {
 				return nil, err
 			}
 
-			var res struct { UserId string `json:"user_id"` }
+			var user User
 
 			for rows.Next() {
-				err = rows.Scan(&res.UserId)
+				err = rows.Scan(
+					&user.UserId,
+					&user.UserName,
+					&user.FirstName,
+					&user.LastName,
+					&user.Email,
+					&user.Phone,
+					&user.DateOfBirth,
+					&user.IsActive,
+				)
+
 				if err != nil {
 					return nil, err
 				}
+			}
+
+			ts, err := utils.CreateToken(user.UserId)
+			if err != nil {
+				return nil, err
+			}
+
+			err = utils.CreateAuth(user.UserId, ts)
+			if err != nil {
+				return nil, err
+			}
+
+			res := struct {
+				User  User
+				Token Token
+			}{
+				user,
+				Token{
+					ts.AccessToken,
+					ts.RefreshToken,
+				},
 			}
 
 			return res, nil
