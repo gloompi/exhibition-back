@@ -48,6 +48,59 @@ var tokenType = graphql.NewObject(graphql.ObjectConfig{
 	},
 })
 
+func readMeSchema() *graphql.Field {
+	return &graphql.Field{
+		Type: userType,
+		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+			req := params.Context.Value("request").(*http.Request)
+			userId, err := utils.TokenValid(req)
+
+			if err != nil {
+				return nil, err
+			}
+
+			query := fmt.Sprintf(`
+				select
+					user_id,
+					user_name,
+					first_name,
+					last_name,
+					email,
+					phone,
+					date_of_birth,
+					is_active
+				from users u where u.user_id = '%v';
+			`, userId)
+
+			rows, err := connection.DB.Query(query)
+			if err != nil {
+				return nil, err
+			}
+
+			var user User
+
+			for rows.Next() {
+				err = rows.Scan(
+					&user.UserId,
+					&user.UserName,
+					&user.FirstName,
+					&user.LastName,
+					&user.Email,
+					&user.Phone,
+					&user.DateOfBirth,
+					&user.IsActive,
+				)
+
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			return user, nil
+		},
+	}
+}
+
 func readUsersSchema() *graphql.Field {
 	return &graphql.Field{
 		Type: graphql.NewList(userType),
