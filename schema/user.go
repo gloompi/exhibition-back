@@ -436,7 +436,7 @@ func readRefreshTokenSchema() *graphql.Field {
 
 				deleted, err := utils.DeleteAuth(refreshUuid)
 				if err != nil || deleted == 0 {
-					return nil, errors.New("failed to delete old `refresh token`")
+					return nil, errors.New("failed to delete old `refresh token`, it probably were deleted already")
 				}
 
 				ts, err := utils.CreateToken(userId)
