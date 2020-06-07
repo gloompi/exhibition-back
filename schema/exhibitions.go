@@ -30,6 +30,7 @@ var exhibitionType = graphql.NewObject(graphql.ObjectConfig{
 			Type: userType,
 			Resolve: func(params graphql.ResolveParams) (interface{}, error) {
 				exhibition, ok := params.Source.(*Exhibition)
+
 				if !ok {
 					return nil, errors.New("were not able to get the exhibition")
 				}
@@ -77,6 +78,57 @@ var exhibitionType = graphql.NewObject(graphql.ObjectConfig{
 		},
 	},
 })
+
+func readExhibitionSchema() *graphql.Field {
+	return &graphql.Field{
+		Type: exhibitionType,
+		Args: graphql.FieldConfigArgument{
+			"id": &graphql.ArgumentConfig{Type: graphql.String},
+		},
+		Resolve: func(params graphql.ResolveParams) (interface{}, error) {
+			id, ok := params.Args["id"].(string)
+
+			if !ok {
+				return nil, errors.New("ID is required")
+			}
+
+			query := fmt.Sprintf(`
+				select
+					exhibition_id,
+					name,
+					description,
+					start_date,
+					created_date,
+					owner_id
+				from exhibitions ex
+				where ex.exhibition_id = %v;
+			`, id)
+
+			rows, err := connection.DB.Query(query)
+			if err != nil {
+				return nil, err
+			}
+
+			exhibition := &Exhibition{}
+
+			for rows.Next() {
+				err = rows.Scan(
+					&exhibition.ExhibitionId,
+					&exhibition.Name,
+					&exhibition.Description,
+					&exhibition.StartDate,
+					&exhibition.CreatedDate,
+					&exhibition.OwnerId,
+				)
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			return exhibition, nil
+		},
+	}
+}
 
 func readExhibitionsSchema() *graphql.Field {
 	return &graphql.Field{

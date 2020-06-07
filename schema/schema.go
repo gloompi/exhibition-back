@@ -22,6 +22,7 @@ func rootQuery() *graphql.Object {
 		"users":       readUsersSchema(),
 		"producers":   readProducersSchema(),
 		"audience":    readAudienceSchema(),
+		"exhibition":  readExhibitionSchema(),
 		"exhibitions": readExhibitionsSchema(),
 		"loginUser":   readLoginUserSchema(),
 		"admins":      readAdminsSchema(),
