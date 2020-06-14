@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/gloompi/tantora-back/app/utils"
@@ -125,6 +126,8 @@ func readExhibitionSchema() *graphql.Field {
 				}
 			}
 
+			decodedStr, _ := hex.DecodeString(exhibition.Description)
+			exhibition.Description = string(decodedStr)
 			return exhibition, nil
 		},
 	}
@@ -183,6 +186,8 @@ func readExhibitionsSchema() *graphql.Field {
 					return nil, err
 				}
 
+				decodedStr, _ := hex.DecodeString(exhibition.Description)
+				exhibition.Description = string(decodedStr)
 				exhibitions = append(exhibitions, &exhibition)
 			}
 
@@ -219,9 +224,9 @@ func readCreateExhibitionSchema() *graphql.Field {
 			description = strings.Replace(description, "'", "''", -1)
 
 			query := fmt.Sprintf(`
-					insert into exhibitions (name, description, start_date, owner_id)
-					values ('%v', '%v', '%v', '%v');
-				`, name, description, startDate, ownerId)
+				insert into exhibitions (name, description, start_date, owner_id)
+				values ('%v', '%v', '%v', '%v');
+			`, name, hex.EncodeToString([]byte(description)), startDate, ownerId)
 
 			stmt, err := connection.DB.Prepare(query)
 			if err != nil {

@@ -13,7 +13,7 @@ func init() {
 	redisPass := os.Getenv("REDIS_PASSWORD")
 
 	if len(redisAddr) == 0 {
-		redisAddr = "localhost:6379"
+		redisAddr = "0.0.0.0:6379"
 	}
 
 	if len(redisPass) == 0 {

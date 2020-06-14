@@ -7,14 +7,20 @@ import (
 )
 
 type config struct {
-	port int
+	port     int
+	grpcPort int
 }
 
 func readConfig() config {
 	portString := os.Getenv("PORT")
+	grpcPortString := os.Getenv("GRPC_PORT")
 
 	if portString == "" {
 		portString = "9999"
+	}
+
+	if grpcPortString == "" {
+		grpcPortString = "50051"
 	}
 
 	port, err := strconv.Atoi(portString)
@@ -23,5 +29,11 @@ func readConfig() config {
 		panic(fmt.Sprintf("Could not parse %s to int", portString))
 	}
 
-	return config{port}
+	grpcPort, err := strconv.Atoi(grpcPortString)
+
+	if err != nil {
+		panic(fmt.Sprintf("Could not parse %s to int", grpcPortString))
+	}
+
+	return config{port, grpcPort}
 }
