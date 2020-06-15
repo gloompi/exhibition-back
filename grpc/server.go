@@ -73,20 +73,26 @@ func (*Server) RecentMessages(_ context.Context, req *tantorapb.RecentMessagesRe
 
 	query := fmt.Sprintf(`
 		select
-			receiver_id,
+			case
+				when receiver_id = %v then sender_id
+				else receiver_id
+			end as receiver_id,
+			created_date,
 			u.user_name,
 			u.first_name,
-			u.last_name,
-			created_date
+			u.last_name 
 		from
 			(select distinct on(receiver_id) receiver_id, sender_id, created_date
 			from message
-			where sender_id = %v
+			where sender_id = %v or receiver_id = 14%v
 			order by receiver_id, created_date desc) message
-			inner join users as u
-				on receiver_id = u.user_id
+			inner join users as u on
+			(case
+				when receiver_id = %v then sender_id = u.user_id
+				when sender_id = %v then receiver_id = user_id
+			end)
 		order by created_date desc;
-	`, userId)
+	`, userId, userId, userId, userId, userId)
 
 	rows, err := connection.DB.Query(query)
 	if err != nil {
