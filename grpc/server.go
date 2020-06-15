@@ -77,14 +77,14 @@ func (*Server) RecentMessages(_ context.Context, req *tantorapb.RecentMessagesRe
 				when receiver_id = %v then sender_id
 				else receiver_id
 			end as receiver_id,
-			created_date,
 			u.user_name,
 			u.first_name,
-			u.last_name 
+			u.last_name,
+			created_date
 		from
 			(select distinct on(receiver_id) receiver_id, sender_id, created_date
 			from message
-			where sender_id = %v or receiver_id = 14%v
+			where sender_id = %v or receiver_id = %v
 			order by receiver_id, created_date desc) message
 			inner join users as u on
 			(case
